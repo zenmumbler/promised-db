@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "module": "umd",
+        "target": "es5",
+
+        "rootDir": "src",
+        "outDir": ".",
+        "declaration": false,
+        "sourceMap": true,
+        "removeComments": false,
+
+        "noEmitOnError": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+
+        "lib": ["es5", "dom", "es2015.core", "es2015.iterable", "es2015.collection", "es2015.promise"],
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": false
+    },
+    "files": [
+        "src/promised-db.ts"
+    ]
+}
