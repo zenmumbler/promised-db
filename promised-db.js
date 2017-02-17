@@ -59,9 +59,7 @@
                     var tc = Object.create(_this.tctx_, {
                         timeout: {
                             value: function (ms) {
-                                console.info("transaction will time out in " + ms + "ms");
                                 timeoutID = setTimeout(function () {
-                                    console.warn("transaction timed out after " + ms + "ms");
                                     timeoutID = null;
                                     tr.abort();
                                 }, ms);
