@@ -63,7 +63,7 @@ export class PromisedDB {
 		});
 	}
 
-	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | undefined): Promise<T | undefined> {
+	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T): Promise<T> {
 		return this.db_.then(db => {
 			return new Promise<T>((resolve, reject) => {
 				const tr = db.transaction(storeNames, mode);
@@ -98,7 +98,7 @@ export class PromisedDB {
 				const result = fn(tr, tc);
 				tr.oncomplete = () => {
 					cancelTimeout();
-					resolve((result === undefined) ? undefined : result);
+					resolve(result);
 				};
 			});
 		});

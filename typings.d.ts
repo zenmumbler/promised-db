@@ -21,11 +21,11 @@ declare module "promised-db" {
 	}
 
 	type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
-	type PDBTransactionFunc<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | void;
+	type PDBTransactionFunc<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
 
 	export class PromisedDB {
 		constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
 		close(): void;
-		transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: PDBTransactionFunc<T>): Promise<T | undefined>;
+		transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: PDBTransactionFunc<T>): Promise<T>;
 	}
 }
