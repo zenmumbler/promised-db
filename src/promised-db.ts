@@ -87,9 +87,7 @@ export class PromisedDB {
 				const tc: PDBTransactionContext = Object.create(this.tctx_, {
 					timeout: {
 						value: function(ms: number) {
-							console.info(`transaction will time out in ${ms}ms`);
 							timeoutID = setTimeout(function() {
-								console.warn(`transaction timed out after ${ms}ms`);
 								timeoutID = null;
 								tr.abort();
 							}, ms);
