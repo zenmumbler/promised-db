@@ -63,7 +63,7 @@ export class PromisedDB {
 		});
 	}
 
-	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T | void>) {
+	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | undefined): Promise<T | undefined> {
 		return this.db_.then(db => {
 			return new Promise<T>((resolve, reject) => {
 				const tr = db.transaction(storeNames, mode);
