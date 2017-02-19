@@ -1,6 +1,6 @@
 {
   "name": "promised-db",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "IndexedDB with a better API using contextual interfaces and timeout support.",
   "scripts": {
     "build": "tslint --project tsconfig.json && tsc && uglifyjs promised-db.js --in-source-map promised-db.js.map --source-map dist/promised-db.min.js.map --screw-ie8 -mc --output dist/promised-db.min.js"
