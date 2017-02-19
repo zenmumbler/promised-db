@@ -13,7 +13,7 @@ Create or Open a Database
 -------------------------
 
 ```typescript
-const pdb = new PromiseDB("mydb", 1,
+const pdb = new PromisedDB("mydb", 1,
   (db, onDiskVersion, newVersion) => {
     // This callback is called when there is no DB on disk or if the version
     // number you specified is greater than the one on disk.
