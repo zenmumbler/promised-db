@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - (BREAKING) the PromisedDB export is now a default export
+- module file now has ES5 syntax
 
 ## 1.0.3 - 2017-03-13
 ### Added
