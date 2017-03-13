@@ -1,10 +1,6 @@
 {
     "compilerOptions": {
-        "module": "umd",
-        "target": "es5",
-
         "rootDir": "src",
-        "outDir": ".",
         "declaration": false,
         "sourceMap": true,
         "removeComments": false,
@@ -21,7 +17,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
 
-        "lib": ["es5", "dom", "es2015.core", "es2015.iterable", "es2015.collection", "es2015.promise"],
+        "lib": ["es5", "dom", "es2015"],
         "skipLibCheck": true,
         "skipDefaultLibCheck": false
     },
