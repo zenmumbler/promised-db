@@ -30,7 +30,7 @@ interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursorResult<C> {
 }
 
 
-export class PromisedDB {
+export default class PromisedDB {
 	private db_: Promise<IDBDatabase>;
 	private tctx_: PDBTransactionContextBase;
 

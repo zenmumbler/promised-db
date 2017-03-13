@@ -167,6 +167,6 @@ define("promised-db", ["require", "exports"], function (require, exports) {
         };
         return PromisedDB;
     }());
-    exports.PromisedDB = PromisedDB;
+    exports.default = PromisedDB;
 });
 //# sourceMappingURL=promised-db.es5.js.map

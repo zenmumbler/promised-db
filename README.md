@@ -12,7 +12,9 @@ timeout functionality to transactions.
 Create or Open a Database
 -------------------------
 
-```typescript
+```javascript
+import PromisedDB from "promised-db";
+
 const pdb = new PromisedDB("mydb", 1,
   (db, onDiskVersion, newVersion) => {
     // This callback is called when there is no DB on disk or if the version
@@ -33,7 +35,7 @@ Transactions
 The `PromisedDB` instance you get back only has 1 method: `transaction`, every
 operation on the db is done with a transaction, like so:
 
-```typescript
+```javascript
 // as with IDB, you specify the stores involved in this request
 // and either "readonly" or "readwrite" as access type
 const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
