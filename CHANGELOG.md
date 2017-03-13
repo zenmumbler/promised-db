@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## 1.0.4 - 2017-03-13
+## [1.0.4] - 2017-03-13
 ### Added
 - added this change log
 
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - (BREAKING) the PromisedDB export is now a default export
 - module file now has ES5 syntax
 
-## 1.0.3 - 2017-03-13
+## [1.0.3] - 2017-03-13
 ### Added
 - add module file with ES2015 style exports
 
