@@ -10,7 +10,7 @@ export interface PDBTransactionContextBase {
 	readonly cursor: (container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursorWithValue>;
 	readonly keyCursor: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursor>;
 	readonly getAll: <T>(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) => Promise<T[]>;
-	readonly getAllKeys: <K extends IDBValidKey>(index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) => Promise<K[]>;
+	readonly getAllKeys: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) => Promise<IDBValidKey[]>;
 }
 export interface PDBTransactionContext extends PDBTransactionContextBase {
 	readonly timeout: (ms: number) => void;
@@ -30,7 +30,7 @@ interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursorResult<C> {
 }
 
 
-export default class PromisedDB {
+export class PromisedDB {
 	private db_: Promise<IDBDatabase>;
 	private tctx_: PDBTransactionContextBase;
 
@@ -76,19 +76,19 @@ export default class PromisedDB {
 					reject("aborted");
 				};
 
-				let timeoutID: number | NodeJS.Timer | null = null;
+				let timeoutID: number | undefined = undefined;
 				const cancelTimeout = function() {
-					if (timeoutID !== null) {
-						clearTimeout(<any>timeoutID); // make timeouts work for both web and node contexts
-						timeoutID = null;
+					if (timeoutID !== undefined) {
+						clearTimeout(timeoutID);
+						timeoutID = undefined;
 					}
 				};
 
 				const tc: PDBTransactionContext = Object.create(this.tctx_, {
 					timeout: {
-						value: function(ms: number) {
+						value(ms: number) {
 							timeoutID = setTimeout(function() {
-								timeoutID = null;
+								timeoutID = undefined;
 								tr.abort();
 							}, ms);
 						}
@@ -189,9 +189,9 @@ export default class PromisedDB {
 		});
 	}
 
-	private _getAllKeys<K extends IDBValidKey>(container: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) {
-		return new Promise<K[]>((resolve, reject) => {
-			const result: K[] = [];
+	private _getAllKeys(container: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) {
+		return new Promise<IDBValidKey[]>((resolve, reject) => {
+			const result: IDBValidKey[] = [];
 
 			this._keyCursor(container, range, direction)
 				.next(cur => {

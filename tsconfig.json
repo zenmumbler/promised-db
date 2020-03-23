@@ -4,24 +4,15 @@
         "declaration": false,
         "sourceMap": true,
         "removeComments": false,
-
         "noEmitOnError": true,
-        "alwaysStrict": true,
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
+
+        "strict": true,
         "noImplicitReturns": true,
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
-        "strictNullChecks": true,
-        "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
 
-        "lib": ["es5", "dom", "es2015"],
-        "skipLibCheck": true,
-        "skipDefaultLibCheck": false
-    },
-    "files": [
-        "src/promised-db.ts"
-    ]
+        "lib": ["dom", "es2017"]
+    }
 }

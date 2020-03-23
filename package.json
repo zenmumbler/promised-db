@@ -1,13 +1,14 @@
 {
   "name": "promised-db",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "IndexedDB with a better API using contextual interfaces and timeout support.",
   "scripts": {
-    "build": "tslint --project tsconfig-es6.json && tsc -p tsconfig-es5.json && tsc -p tsconfig-es6.json && uglifyjs promised-db.es5.js --in-source-map promised-db.es5.js.map --source-map dist/promised-db.min.js.map --screw-ie8 -mc --output dist/promised-db.min.js"
+    "build": "tsc -p tsconfig-es6.json",
+    "dev": ""
   },
-  "main": "promised-db.es5.js",
-  "module": "promised-db.js",
-  "typings": "promised-db.d.ts",
+  "main": "dist/promised-db.js",
+  "module": "dist/promised-db.js",
+  "typings": "dist/promised-db.d.ts",
   "homepage": "https://github.com/zenmumbler/promised-db",
   "repository": {
     "type": "git",
@@ -24,8 +25,6 @@
     "url": "https://github.com/zenmumbler/promised-db/issues"
   },
   "devDependencies": {
-    "@types/node": "^7.0.8",
-    "typescript": "^2.2.1",
-    "uglify-js": "^2.8.12"
+    "typescript": "^3.8.3"
   }
 }
