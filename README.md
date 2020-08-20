@@ -41,7 +41,7 @@ operation on the db is done with a transaction, like so:
 const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
   // you pass a function that constitutes the actual transaction
   // you get the IDBTransaction and a context object as parameters (see doc below)
-  (tr, {request, getAll, getAllKeys, timeout, cursor, keyCursor}) => {
+  (tr, {request, timeout, cursor, keyCursor}) => {
     // have this request timeout and abort after 5 seconds (optional)
     timeout(5000);
 
@@ -49,14 +49,9 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
     const stuff = tr.objectStore("stuff");
 
     // use request(r: IDBRequest) to Promise-wrap any IDB request
-    // this includes: get(), put(), update(), delete(), count(), etc.
+    // this includes: get(), put(), update(), delete(), count(), getAll(), getAllKeys(), etc.
     const itemProm = request(stuff.get(someKey));
     // itemProm is of type Promise<any>
-
-    // getAll and getAllKeys are provided to either call native IDB 2
-    // methods or a polyfill for implementations of IDB 1.
-    const allRecords = getAll<RecordType>(someIndex or someStore, someKey);
-    // allRecords is of type Promise<RecordType[]>
 
     // Use cursor or keyCursor to build a fluent cursor object to iterate
     // over rows with full control.
@@ -65,7 +60,8 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
       .next(cur => {
         // cur is an IDBCursor, `value` will be present for non-key cursors
         myProcessFunc(cur.value);
-        // NOTE: you still MUST call cur.continue() to proceed to the next record
+        // NOTE: you still have to call cur.continue() to proceed to the next record
+        // or use calls like cur.continuePrimaryKey(...) for paged views etc.
         cur.continue();
       })
       .complete(() => {
@@ -110,8 +106,6 @@ interface PDBTransactionContext {
   request: (req: IDBRequest, fn?: (req: IDBRequest) => void) => Promise<any>;
   cursor: (container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursorWithValue>;
   keyCursor: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursor>;
-  getAll: <T>(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) => Promise<T[]>;
-  getAllKeys: <K extends IDBValidKey>(index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection, limit?: number) => Promise<K[]>;
   timeout: (ms: number) => void;
 }
 
@@ -128,4 +122,4 @@ class PromisedDB {
 ---
 
 License: MIT License<br>
-(c) 2016-Present by Arthur Langereis ([@zenmumbler](https://twitter.com/zenmumbler))
+(c) 2016-Present by [@zenmumbler](https://twitter.com/zenmumbler)

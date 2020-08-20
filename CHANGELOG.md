@@ -1,7 +1,11 @@
 # promised-db changelog
 
-## 2.0.0 - 2020-03-XX
-- X
+## 2.0.0 - 2020-08-20
+- basically, many things have changed, mostly simplified.
+- BREAKING: now distributed as a single ES6 module
+- BREAKING: instance creation is now done through a helper method
+- BREAKING: all() and allKeys() methods removed (use built-in ones instead)
+- BREAKING: the active IDBTransaction is now passed to the upgradeCallback
 
 ## 1.0.4 - 2017-03-13
 - added this change log
