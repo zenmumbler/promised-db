@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "IndexedDB with a better API using contextual interfaces and timeout support.",
   "scripts": {
-    "build": "tsc -p tsconfig-es6.json",
+    "build": "tsc -p tsconfig.json",
     "dev": ""
   },
   "main": "dist/promised-db.js",
@@ -19,12 +19,12 @@
     "promise",
     "typescript"
   ],
-  "author": "Arthur Langereis",
+  "author": "@zenmumbler",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/zenmumbler/promised-db/issues"
   },
   "devDependencies": {
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.7"
   }
 }
