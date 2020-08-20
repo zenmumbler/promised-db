@@ -1,30 +1,32 @@
 {
-  "name": "promised-db",
-  "version": "2.0.0",
-  "description": "IndexedDB with a better API using contextual interfaces and timeout support.",
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": ""
-  },
-  "main": "dist/promised-db.js",
-  "module": "dist/promised-db.js",
-  "typings": "dist/promised-db.d.ts",
-  "homepage": "https://github.com/zenmumbler/promised-db",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zenmumbler/promised-db.git"
-  },
-  "keywords": [
-    "indexeddb",
-    "promise",
-    "typescript"
-  ],
-  "author": "@zenmumbler",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/zenmumbler/promised-db/issues"
-  },
-  "devDependencies": {
-    "typescript": "^3.9.7"
-  }
+	"name": "promised-db",
+	"version": "2.0.0",
+	"description": "Use IndexedDB with Promises and quality of life features",
+	"scripts": {
+		"build": "tsc -p tsconfig.json"
+	},
+	"main": "dist/promised-db.js",
+	"module": "dist/promised-db.js",
+	"typings": "dist/promised-db.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zenmumbler/promised-db.git"
+	},
+	"keywords": [
+		"indexeddb",
+		"promise",
+		"typescript"
+	],
+	"author": "@zenmumbler",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/zenmumbler/promised-db/issues"
+	},
+	"devDependencies": {
+		"typescript": "^3.9.7"
+	},
+	"files": [
+		"dist/promised-db.d.ts",
+		"dist/promised-db.js"
+	]
 }
