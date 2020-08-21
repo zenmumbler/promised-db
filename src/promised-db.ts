@@ -13,7 +13,7 @@ declare global {
 }
 
 export type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
-export type PDBUpgradeCallback = (db: IDBDatabase, tr: IDBTransaction, fromVersion: number, toVersion: number) => void;
+export type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
 
 export type PDBTransactionMode = "readonly" | "readwrite";
 export interface PDBTransactionContext {
@@ -49,7 +49,7 @@ export function openDatabase(name: string, version: number, upgrade: PDBUpgradeC
 		req.onupgradeneeded = upgradeEvt => {
 			const db = req.result;
 			db.onerror = () => { reject("An error occurred while updating the database"); };
-			upgrade(db, req.transaction!, upgradeEvt.oldVersion, upgradeEvt.newVersion || version);
+			upgrade(db, upgradeEvt.oldVersion, upgradeEvt.newVersion || version);
 		};
 		req.onsuccess = () => {
 			const db = req.result;

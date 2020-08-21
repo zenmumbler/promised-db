@@ -5,7 +5,6 @@
 - BREAKING: now distributed as a single ES6 module with named exports
 - BREAKING: instance creation is now done through a helper method (openDatabase)
 - BREAKING: all() and allKeys() methods removed (use built-in ones instead)
-- BREAKING: the active IDBTransaction is now passed to the upgradeCallback
 - added deleteDatabase, compareKeys and listDatabases helper methods
 
 ## 1.0.4 - 2017-03-13

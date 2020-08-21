@@ -28,7 +28,7 @@ declare module "promised-db" {
 	}
 	
 	type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
-	type PDBUpgradeCallback = (db: IDBDatabase, tr: IDBTransaction, fromVersion: number, toVersion: number) => void;
+	type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
 	
 	interface PromisedDB {
 		transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: PDBTransactionCallback<T>): Promise<T>;

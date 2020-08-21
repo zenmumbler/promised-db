@@ -18,15 +18,11 @@ upgrade function. The returned promise resolves when any upgrades are complete.
 import { openDatabase } from "promised-db";
 
 const pdb = await openDatabase("mydb", 1,
-  (db, tr, onDiskVersion, newVersion) => {
+  (db, onDiskVersion, newVersion) => {
     // This callback is called when there is no DB on disk or if the version
     // number you specified is greater than the one on disk.
     // This function is the _only_ place where you can make schema changes to
     // the database.
-
-    // tr is the internal transaction for the upgrade, with which you can
-    // for example get the currently present stores
-    const activeStores = tr.objectStoreNames;
 
     // db is an IDBDatabase instance
     // proceed as in a normal upgradeneeded callback
