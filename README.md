@@ -1,6 +1,5 @@
 PromisedDB
 ==========
-
 A library with TypeScript support for a better experience using IndexedDB, hiding
 the event handlers and weird cursor API stuff that I don't like while still using
 IndexedDB as normal as possible.
@@ -11,18 +10,25 @@ timeout functionality to transactions.
 
 Create or Open a Database
 -------------------------
+The `openDatabase` function returns a promise to a `PromisedDB` instance and works
+similarly to a `new IndexedDB(...)` call. You provide the db name and version and the
+upgrade function. The returned promise resolves when any upgrades are complete.
 
-```javascript
-import PromisedDB from "promised-db";
+```typescript
+import { openDatabase } from "promised-db";
 
-const pdb = new PromisedDB("mydb", 1,
-  (db, onDiskVersion, newVersion) => {
+const pdb = await openDatabase("mydb", 1,
+  (db, tr, onDiskVersion, newVersion) => {
     // This callback is called when there is no DB on disk or if the version
     // number you specified is greater than the one on disk.
     // This function is the _only_ place where you can make schema changes to
     // the database.
 
-    // db is just an IDBDatabase instance
+    // tr is the internal transaction for the upgrade, with which you can
+    // for example get the currently present stores
+    const activeStores = tr.objectStoreNames;
+
+    // db is an IDBDatabase instance
     // proceed as in a normal upgradeneeded callback
     const stuff = db.createObjectStore("stuff", { keyPath: "index" });
     stuff.createIndex("userID", "userID", { unique: true });
@@ -31,11 +37,10 @@ const pdb = new PromisedDB("mydb", 1,
 
 Transactions
 ------------
+Every read/write operation on the db is done in a transaction, start one using the
+`transaction` method:
 
-The `PromisedDB` instance you get back only has 1 method: `transaction`, every
-operation on the db is done with a transaction, like so:
-
-```javascript
+```typescript
 // as with IDB, you specify the stores involved in this request
 // and either "readonly" or "readwrite" as access type
 const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
@@ -50,8 +55,8 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
 
     // use request(r: IDBRequest) to Promise-wrap any IDB request
     // this includes: get(), put(), update(), delete(), count(), getAll(), getAllKeys(), etc.
-    const itemProm = request(stuff.get(someKey));
-    // itemProm is of type Promise<any>
+    // provide the type of the result to get a typed promise
+    const itemProm = request<MyItem>(stuff.get(someKey));
 
     // Use cursor or keyCursor to build a fluent cursor object to iterate
     // over rows with full control.
@@ -68,10 +73,10 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
         // (optional) do something when the cursor has iterated to the end of the range
       })
       .catch(error => {
-        // (optional) handle an error occuring inside cursor handling
+        // (optional) handle an error occurring inside cursor handling
       });
 
-    // if you don't need to wait for the result you don't have to wrap requests
+    // if you don't care about the result you don't have to wrap requests
     stuff.delete(someOtherKey);
 
     // the optional return value of this function is the result type of
@@ -79,7 +84,7 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
     return Promise.all([itemProm, allRecords]);
   });
 
-// Then just handle the transaction's Promise:
+// Then handle the transaction's Promise:
 trans
   .then(result => {
     // ... process whatever you returned in your transaction function
@@ -89,34 +94,60 @@ trans
   });
 ```
 
-Interface
----------
+Closing the Database
+--------------------
+In many cases you don't have to manually close a database, but if you do then
+call the `close` method on your instance
 
 ```typescript
-type PDBTransactionMode = "readonly" | "readwrite";
-type PDBCursorDirection = "next" | "prev" | "nextunique" | "prevunique";
+pdb.close(); // no result
+```
 
-interface PDBCursorResult<C extends IDBCursor> {
-  next(callback: (cursor: C) => void): PDBCursorResult<C>;
-  complete(callback: () => void): PDBCursorResult<C>;
-  catch(callback: (error: any) => void): PDBCursorResult<C>;
-}
+Keep in mind that while you will still have an active instance, it is now
+in a state where you can no longer run transactions on it.
 
-interface PDBTransactionContext {
-  request: (req: IDBRequest, fn?: (req: IDBRequest) => void) => Promise<any>;
-  cursor: (container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursorWithValue>;
-  keyCursor: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursorResult<IDBCursor>;
-  timeout: (ms: number) => void;
-}
+Deleting a Database
+-------------------
+To delete a database, pass the name of the database you wish to delete.
+This function is a promise-wrapped `indexedDB.deleteDatabase()`.
 
-type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
-type PDBTransactionFunc = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T | void>;
+```typescript
+import { deleteDatabase } from "promised-db";
 
-class PromisedDB {
-  constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
-  close(): void;
-  transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: PDBTransactionFunc): Promise<T>;
-}
+deleteDatabase("mydb")
+  .then(() => { /* success */ })
+  .catch(err => { /* handle error */ });
+```
+
+Deleting will fail if the database does't exist or is still in use.
+
+Testing the relative order of keys
+----------------------------------
+You can manually query the relative order of 2 keys by passing them
+to `compareKeys`. This function is a promise-wrapped `indexedDB.cmp()`.
+
+```typescript
+import { compareKeys } from "promised-db";
+
+// ordering is -1 if keyA < keyB, 1 if keyA > keyB and 0 if the keys are equal
+let ordering = compareKeys(keyA, keyB);
+```
+
+This function will throw if either keyA or keyB is not a valid IndexedDB key.
+
+List available databases
+------------------------
+You can request a list of databases, getting the `name` and `version` of each.
+This function is a promise-wrapped `indexedDB.databases()`.
+
+⚠️ This feature is not yet widely implemented. `listDatabases` will return a
+`DOMException` of type `NotSupportedError` when the feature is missing.
+
+```typescript
+import { listDatabases } from "promised-db";
+
+// dbs is an array of { name: string; version: number; } records
+const dbs = await listDatabases();
 ```
 
 ---
