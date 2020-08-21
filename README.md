@@ -93,14 +93,14 @@ trans
 Closing the Database
 --------------------
 In many cases you don't have to manually close a database, but if you do then
-call the `close` method on your instance
+call the `close` method on your instance:
 
 ```typescript
 pdb.close(); // no result
 ```
 
-Keep in mind that while you will still have an active instance, it is now
-in a state where you can no longer run transactions on it.
+While the pdb instance is still there after calling `close`(),
+it is now in a state where you can no longer run transactions on it.
 
 Deleting a Database
 -------------------
@@ -120,7 +120,7 @@ Deleting will fail if the database does't exist or is still in use.
 Testing the relative order of keys
 ----------------------------------
 You can manually query the relative order of 2 keys by passing them
-to `compareKeys`. This function is a promise-wrapped `indexedDB.cmp()`.
+to `compareKeys`. This function is equivalent to `indexedDB.cmp()`.
 
 ```typescript
 import { compareKeys } from "promised-db";
@@ -136,8 +136,8 @@ List available databases
 You can request a list of databases, getting the `name` and `version` of each.
 This function is a promise-wrapped `indexedDB.databases()`.
 
-⚠️ This feature is not yet widely implemented. `listDatabases` will return a
-`DOMException` of type `NotSupportedError` when the feature is missing.
+⚠️ This feature is not yet widely implemented. `listDatabases` will reject with a
+`DOMException` of type `NotSupportedError` if the feature is missing.
 
 ```typescript
 import { listDatabases } from "promised-db";
