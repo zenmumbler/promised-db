@@ -1,6 +1,17 @@
 // promised-db - IndexedDB wrapped in a promise-based API with contextual methods and timeout support. (https://github.com/zenmumbler/promised-db)
 // (c) 2016-Present by @zenmumbler
 
+declare global {
+	interface PDBDatabaseInfo {
+		name: string;
+		version: number;
+	}
+
+	interface IDBFactory {
+		databases?(): Promise<PDBDatabaseInfo[]>;
+	}
+}
+
 export type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
 export type PDBUpgradeCallback = (db: IDBDatabase, tr: IDBTransaction, fromVersion: number, toVersion: number) => void;
 
@@ -43,9 +54,28 @@ export function openDatabase(name: string, version: number, upgrade: PDBUpgradeC
 		req.onsuccess = () => {
 			const db = req.result;
 			db.onerror = null;
-			resolve(new PromisedDBImpl(db));
+			resolve(new PromisedDB(db));
 		};
 	});
+}
+
+export function deleteDatabase(name: string) {
+	return new Promise<void>(function(resolve, reject) {
+		const req = indexedDB.deleteDatabase(name);
+		req.onerror = () => { reject(`Could not delete database "${name}"`); };
+		req.onsuccess = () => { resolve(); };
+	});
+}
+
+export function compareKeys(first: IDBValidKey, second: IDBValidKey) {
+	return indexedDB.cmp(first, second);
+}
+
+export function listDatabases() {
+	if (! indexedDB.databases) {
+		return Promise.reject(new DOMException("The IDBFactory.databases method is not supported in this environment.", "NotSupportedError"));
+	}
+	return indexedDB.databases();
 }
 
 function request<R extends IDBRequest>(req: R, fn?: (req: R) => void): Promise<any> {
@@ -107,7 +137,7 @@ function keyCursor(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | I
 	return cursorImpl(cursorReq);
 }
 
-class PromisedDBImpl {
+export class PromisedDB {
 	private db_: IDBDatabase;
 
 	constructor(db: IDBDatabase) {

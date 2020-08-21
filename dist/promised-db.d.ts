@@ -1,6 +1,15 @@
 // promised-db - IndexedDB wrapped in a promise-based API with contextual methods and timeout support.
 // (c) 2016-Present by @zenmumbler
 
+interface PDBDatabaseInfo {
+	name: string;
+	version: number;
+}
+
+interface IDBFactory {
+	databases?(): Promise<PDBDatabaseInfo[]>;
+}
+
 declare module "promised-db" {
 	type PDBTransactionMode = "readonly" | "readwrite";
 	type PDBCursorDirection = "next" | "prev" | "nextunique" | "prevunique";
@@ -27,4 +36,7 @@ declare module "promised-db" {
 	}
 
 	function openDatabase(name: string, version: number, upgrade: PDBUpgradeCallback): Promise<PromisedDB>;
+	function deleteDatabase(name: string): Promise<void>;
+	function compareKeys(first: IDBValidKey, second: IDBValidKey): number;
+	function listDatabases(): Promise<PDBDatabaseInfo[]>;
 }
