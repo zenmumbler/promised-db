@@ -14,6 +14,7 @@ declare global {
 
 export type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
 export type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
+export type PDBMigrationCallback = (db: IDBDatabase) => void;
 
 export type PDBTransactionMode = "readonly" | "readwrite";
 export interface PDBTransactionContext {
@@ -57,6 +58,20 @@ export function openDatabase(name: string, version: number, upgrade: PDBUpgradeC
 			resolve(new PromisedDB(db));
 		};
 	});
+}
+
+export function openDatabaseWithMigrations(name: string, migrations: PDBMigrationCallback[]) {
+	const version = migrations.length;
+	if (version === 0) {
+		return Promise.reject(new RangeError("At least one migration must be provided."));
+	}
+
+	return openDatabase(name, version,
+		(db, migrationVersion) => {
+			while (migrationVersion < version) {
+				migrations[migrationVersion++](db);
+			}
+		});
 }
 
 export function deleteDatabase(name: string) {

@@ -31,6 +31,37 @@ const pdb = await openDatabase("mydb", 1,
   });
 ```
 
+Open a Database with migration functions
+----------------------------------------
+PromisedDB supports a simple migration system that takes advantage of versioned
+nature of IndexedDB. Instead of a version and update function, you provide an
+array of migration functions. Each function runs one migration similar to how
+they are managed in many server side frameworks. The number of migrations is the
+current version of the database.
+
+```typescript
+import { openDatabaseWithMigrations } from "promised-db";
+
+const migrations = [
+  (db: IDBDatabase) => {
+    // first migration, create initial stores and indexes (version 0 -> 1)
+    const users = db.createObjectStore("myUsers", { keyPath: "userID" });
+    users.createIndex("userEmail", "email", { unique: true });
+  },
+  (db: IDBDatabase) => {
+    // second migration, first update (version 1 -> 2)
+    const users = db.objectStore("myUsers");
+    users.name = "users";
+  }
+  // etc
+];
+
+const db = await openDatabaseWithMigrations("mydb", migrations);
+```
+
+The advantage of this is that you can organise your migrations separately and not
+have to worry about creating unwieldy upgrade functions or about version numbers.
+
 Transactions
 ------------
 Every read/write operation on the db is done in a transaction, start one using the

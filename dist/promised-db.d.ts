@@ -29,13 +29,15 @@ declare module "promised-db" {
 	
 	type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
 	type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
-	
+	type PDBMigrationCallback = (db: IDBDatabase) => void;
+
 	interface PromisedDB {
 		transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: PDBTransactionCallback<T>): Promise<T>;
 		close(): void;
 	}
 
 	function openDatabase(name: string, version: number, upgrade: PDBUpgradeCallback): Promise<PromisedDB>;
+	function openDatabaseWithMigrations(name: string, migrations: PDBMigrationCallback[]): Promise<PromisedDB>;
 	function deleteDatabase(name: string): Promise<void>;
 	function compareKeys(first: IDBValidKey, second: IDBValidKey): number;
 	function listDatabases(): Promise<PDBDatabaseInfo[]>;
