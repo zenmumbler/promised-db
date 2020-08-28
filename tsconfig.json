@@ -4,9 +4,10 @@
         "module": "ES2015",
         "rootDir": "src",
         "outDir": "dist",
-        "declaration": false,
+        "declaration": true,
+        "stripInternal": true,
         "sourceMap": false,
-        "removeComments": true,
+        "removeComments": false,
         "noEmitOnError": true,
 
         "strict": true,
