@@ -141,9 +141,9 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
     const itemProm = request<MyItem>(stuff.get(someKey));
 
     // Use cursor or keyCursor to build a fluent cursor object to iterate
-    // over either all rows or those within a range, if provided.
+    // over either all rows or those within a `range`, if provided.
     // `direction` is "next" | "prev" | "nextunique" | "prevunique", default "next"
-    cursor(stuff, optionalRange, direction)
+    cursor(stuff, { range, direction })
       .next(cur => {
         // cur is an IDBCursor, `value` will be present for non-key cursors
         myProcessFunc(cur.value);

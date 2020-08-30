@@ -3,6 +3,7 @@
 ## 3.0.0 - 2020-08-28
 - BREAKING: removed openDatabase call again
 - BREAKING: removed useless function argument for request
+- BREAKING: place the 2 optional args to cursor helpers in an options object
 - add support for simple managed migrations
 - add signal promises for opened, closed, outdated and blocked
 - add doc comments to all APIs for in-editor help

@@ -18,13 +18,19 @@ export type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion
 export type PDBMigrationHandler = (db: IDBDatabase) => void;
 
 export type PDBTransactionMode = "readonly" | "readwrite";
+
+export interface PDBCursorOptions {
+	range?: IDBKeyRange | IDBValidKey;
+	direction?: PDBCursorDirection;
+};
+
 export interface PDBTransactionHelpers {
 	/** Wrap a request inside a promise */
 	request: <T>(req: IDBRequest) => Promise<T>;
 	/** Return a cursor interface to iterate over a sequence of key-value pairs */
-	cursor: (container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursor<IDBCursorWithValue>;
+	cursor: (container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) => PDBCursor<IDBCursorWithValue>;
 	/** Return a cursor interface to iterate over a sequence of keys */
-	keyCursor: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursor<IDBCursor>;
+	keyCursor: (container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) => PDBCursor<IDBCursor>;
 	/** Configure a timeout for this transaction. If the transaction does not complete within the specified time it will reject with a TimeoutError */
 	timeout: (ms: number) => void;
 }
@@ -122,12 +128,14 @@ function cursorImpl<C extends IDBCursor>(cursorReq: IDBRequest): PDBCursor<C> {
 	return result;
 }
 
-function cursor(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) {
+function cursor(container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) {
+	const { range, direction } = options ?? {};
 	const cursorReq = container.openCursor(range, direction);
 	return cursorImpl<IDBCursorWithValue>(cursorReq);
 }
 
-function keyCursor(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) {
+function keyCursor(container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) {
+	const { range, direction } = options ?? {};
 	const cursorReq = container.openKeyCursor(range, direction);
 	return cursorImpl(cursorReq);
 }
