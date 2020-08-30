@@ -33,15 +33,9 @@ export interface PDBCursor<C extends IDBCursor> {
     /** Optional callback for when an error occurred while iterating over the range */
     catch(callback: (error: any) => void): PDBCursor<C>;
 }
-/** Open a named database with manual version and upgrade management */
-export declare function openDatabase(name: string, version: number, upgrade: PDBUpgradeCallback): PromisedDB;
-/** Open a named database providing a list of migration functions */
-export declare function openDatabaseWithMigrations(name: string, migrations: PDBMigrationCallback[]): PromisedDB;
 /**
- * Delete a named database. Main usage for this is if you are making way for
- * another process that is blocked waiting to upgrade the database.
- * @see blocked
- * @see outdated
+ * Delete a named database. This will fail if the database in question is still
+ * in use or if it doesn't exist.
  */
 export declare function deleteDatabase(name: string): Promise<void>;
 /** Query the relative order of 2 keys. This function is equivalent to `indexedDB.cmp()`. */
@@ -52,7 +46,12 @@ export declare function compareKeys(first: IDBValidKey, second: IDBValidKey): nu
  * NOTE: this feature is not yet widely supported and will throw if it is unavailable.
  */
 export declare function listDatabases(): Promise<PDBDatabaseInfo[]>;
+/** A promise-based wrapper to manage and simplify common tasks with IndexedDB */
 export declare class PromisedDB {
+    /** Open a named database providing a list of migration functions */
+    constructor(name: string, migrations: PDBMigrationCallback[]);
+    /** Open a named database with manual version and upgrade management */
+    constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
     /**
      * Close the connection to the database.
      * No further transactions can be performed after this point.
@@ -61,7 +60,7 @@ export declare class PromisedDB {
     /**
      * A promise that will resolve if the connection to the database opened and any
      * upgrades were succesfully applied. In basic situations you don't have to wait for
-     * this to happend but waiting for this if the connection was blocked will allow
+     * this to happen but waiting for this if the connection was blocked will allow
      * you to remove any UI you put up while waiting for the connection to become available.
      */
     get opened(): Promise<void>;
@@ -87,6 +86,7 @@ export declare class PromisedDB {
     get blocked(): Promise<void>;
     /**
      * Perform a transaction on specific stores in the database and optionally return data.
+     * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
      * @param storeNames One or more names of the stores to include this transaction
      * @param mode Specify read only or read/write access to the stores
      * @param fn Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.

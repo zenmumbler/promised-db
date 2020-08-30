@@ -1,5 +1,12 @@
 # promised-db changelog
 
+## 3.0.0 - 2020-08-28
+- BREAKING: removed openDatabase call again
+- BREAKING: removed useless function argument for request
+- add support for simple managed migrations
+- add signal promises for opened, closed, outdated and blocked
+- add doc comments to all APIs for in-editor help
+
 ## 2.0.0 - 2020-08-21
 - basically, most things have changed and expanded, read the README for details
 - BREAKING: now distributed as a single ES6 module with named exports
