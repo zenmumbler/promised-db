@@ -162,6 +162,9 @@ export class PromisedDB {
 			const migrations = vorm;
 			version = migrations.length;
 			upgrade = (db, migrationVersion) => {
+				if (migrationVersion < 0 || migrationVersion >= version) {
+					throw new DOMException("The current database version does not correspond to the provided migration list.", "VersionError");
+				}
 				while (migrationVersion < version) {
 					migrations[migrationVersion++](db);
 				}
