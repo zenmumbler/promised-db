@@ -7,11 +7,11 @@ declare global {
         databases?(): Promise<PDBDatabaseInfo[]>;
     }
 }
-export declare type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
-export declare type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
-export declare type PDBMigrationCallback = (db: IDBDatabase) => void;
+export declare type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
+export declare type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
+export declare type PDBMigrationHandler = (db: IDBDatabase) => void;
 export declare type PDBTransactionMode = "readonly" | "readwrite";
-export interface PDBTransactionContext {
+export interface PDBTransactionHelpers {
     /** Wrap a request inside a promise */
     request: <T>(req: IDBRequest) => Promise<T>;
     /** Return a cursor interface to iterate over a sequence of key-value pairs */
@@ -49,9 +49,9 @@ export declare function listDatabases(): Promise<PDBDatabaseInfo[]>;
 /** A promise-based wrapper to manage and simplify common tasks with IndexedDB */
 export declare class PromisedDB {
     /** Open a named database providing a list of migration functions */
-    constructor(name: string, migrations: PDBMigrationCallback[]);
+    constructor(name: string, migrations: PDBMigrationHandler[]);
     /** Open a named database with manual version and upgrade management */
-    constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
+    constructor(name: string, version: number, upgrade: PDBUpgradeHandler);
     /**
      * Close the connection to the database.
      * No further transactions can be performed after this point.
@@ -89,7 +89,7 @@ export declare class PromisedDB {
      * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
      * @param storeNames One or more names of the stores to include this transaction
      * @param mode Specify read only or read/write access to the stores
-     * @param fn Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
+     * @param handler Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
      */
-    transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T): Promise<T>;
+    transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T>;
 }

@@ -13,12 +13,12 @@ declare global {
 	}
 }
 
-export type PDBTransactionCallback<T> = (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T;
-export type PDBUpgradeCallback = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
-export type PDBMigrationCallback = (db: IDBDatabase) => void;
+export type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
+export type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
+export type PDBMigrationHandler = (db: IDBDatabase) => void;
 
 export type PDBTransactionMode = "readonly" | "readwrite";
-export interface PDBTransactionContext {
+export interface PDBTransactionHelpers {
 	/** Wrap a request inside a promise */
 	request: <T>(req: IDBRequest) => Promise<T>;
 	/** Return a cursor interface to iterate over a sequence of key-value pairs */
@@ -144,11 +144,11 @@ export class PromisedDB {
 	private blockedPromise_!: Promise<void>;
 
 	/** Open a named database providing a list of migration functions */
-	constructor(name: string, migrations: PDBMigrationCallback[]);
+	constructor(name: string, migrations: PDBMigrationHandler[]);
 	/** Open a named database with manual version and upgrade management */
-	constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
+	constructor(name: string, version: number, upgrade: PDBUpgradeHandler);
 
-	constructor(name: string, vorm?: number | PDBMigrationCallback[], upgrade?: PDBUpgradeCallback) {
+	constructor(name: string, vorm?: number | PDBMigrationHandler[], upgrade?: PDBUpgradeHandler) {
 		let version: number;
 		if (typeof vorm === "number" && typeof upgrade === "function") {
 			version = vorm;
@@ -268,9 +268,9 @@ export class PromisedDB {
 	 * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
 	 * @param storeNames One or more names of the stores to include this transaction
 	 * @param mode Specify read only or read/write access to the stores
-	 * @param fn Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
+	 * @param handler Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
 	 */
-	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, fn: (tr: IDBTransaction, context: PDBTransactionContext) => Promise<T> | T): Promise<T> {
+	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T> {
 		return this.db_.then(db => new Promise<T>((resolve, reject) => {
 			let timeoutID: number | undefined;
 			let timedOut = false;
@@ -281,30 +281,31 @@ export class PromisedDB {
 				}
 			};
 
-			const tr = db.transaction(storeNames, mode);
-			tr.onabort = () => {
+			const tx = db.transaction(storeNames, mode);
+			tx.onabort = () => {
 				cancelTimeout();
-				reject(timedOut ? new DOMException("The operation timed out", "TimeoutError") : tr.error);
+				reject(timedOut ? new DOMException("The operation timed out", "TimeoutError") : tx.error);
 			};
-			tr.oncomplete = () => {
+			tx.oncomplete = () => {
 				cancelTimeout();
 				resolve(result);
 			};
 
-			const tc: PDBTransactionContext = {
+			const helpers: PDBTransactionHelpers = {
 				request,
 				cursor,
 				keyCursor,
 				timeout(ms: number) {
+					cancelTimeout();
 					timeoutID = setTimeout(function() {
 						timeoutID = undefined;
 						timedOut = true;
-						tr.abort();
+						tx.abort();
 					}, ms);
 				}
 			};
 
-			const result = fn(tr, tc);
+			const result = handler(tx, helpers);
 		}));
 	}
 }
