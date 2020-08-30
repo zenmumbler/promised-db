@@ -1,9 +1,10 @@
 # promised-db changelog
 
-## 3.0.0 - 2020-08-28
+## 3.0.0 - 2020-08-30
 - BREAKING: removed openDatabase call again
 - BREAKING: removed useless function argument for request
 - BREAKING: place the 2 optional args to cursor helpers in an options object
+- expose all IDB 3.0 new type additions and normalise existing type usage
 - add support for simple managed migrations
 - add signal promises for opened, closed, outdated and blocked
 - add errorevent param to cursor error handler

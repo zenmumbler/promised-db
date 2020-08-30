@@ -1,19 +1,36 @@
 declare global {
-    interface PDBDatabaseInfo {
+    interface IDBDatabaseInfo {
         name: string;
         version: number;
     }
     interface IDBFactory {
-        databases?(): Promise<PDBDatabaseInfo[]>;
+        /** New in IndexedDB 3.0 - not widely implemented */
+        databases(): Promise<IDBDatabaseInfo[]>;
+    }
+    type IDBTransactionDurability = "default" | "strict" | "relaxed";
+    interface IDBTransactionOptions {
+        durability?: IDBTransactionDurability;
+    }
+    interface IDBDatabase {
+        transaction(storeNames: string | string[], mode?: IDBTransactionMode, options?: IDBTransactionOptions): IDBTransaction;
+    }
+    interface IDBTransaction {
+        /** New in IndexedDB 3.0 - not widely implemented */
+        commit(): void;
+        /** New in IndexedDB 3.0 - not widely implemented */
+        readonly durability: IDBTransactionDurability;
+    }
+    interface IDBCursor {
+        /** New in IndexedDB 3.0 - not widely implemented */
+        readonly request: IDBRequest;
     }
 }
-export declare type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
 export declare type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
 export declare type PDBMigrationHandler = (db: IDBDatabase) => void;
-export declare type PDBTransactionMode = "readonly" | "readwrite";
+export declare type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
 export interface PDBCursorOptions {
     range?: IDBKeyRange | IDBValidKey;
-    direction?: PDBCursorDirection;
+    direction?: IDBCursorDirection;
 }
 export interface PDBTransactionHelpers {
     /** Wrap a request inside a promise */
@@ -25,7 +42,6 @@ export interface PDBTransactionHelpers {
     /** Configure a timeout for this transaction. If the transaction does not complete within the specified time it will reject with a TimeoutError */
     timeout: (ms: number) => void;
 }
-export declare type PDBCursorDirection = "next" | "prev" | "nextunique" | "prevunique";
 export interface PDBCursor<C extends IDBCursor> {
     /**
      * Handler for each time the cursor moves to the next key or key-value pair.
@@ -49,7 +65,7 @@ export declare function compareKeys(first: IDBValidKey, second: IDBValidKey): nu
  * This function is a promise-wrapped `indexedDB.databases()`.
  * NOTE: this feature is not yet widely supported and will throw if it is unavailable.
  */
-export declare function listDatabases(): Promise<PDBDatabaseInfo[]>;
+export declare function listDatabases(): Promise<IDBDatabaseInfo[]>;
 /** A promise-based wrapper to manage and simplify common tasks with IndexedDB */
 export declare class PromisedDB {
     /** Open a named database providing a list of migration functions */
