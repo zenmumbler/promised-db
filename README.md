@@ -182,7 +182,7 @@ const trans = pdb.transaction(["top_secret"], "readwrite",
   },
   (tx, {request}) => {
     // This transaction will only complete once all changes have been
-    // flushed to disk. This can be a expensive and/or lengthy operation so
+    // flushed to disk. This can be an expensive and/or lengthy operation so
     // only do this for critical data.
   });
 ```
