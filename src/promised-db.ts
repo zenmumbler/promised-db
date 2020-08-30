@@ -1,4 +1,5 @@
-// promised-db - IndexedDB wrapped in a promise-based API with contextual methods and timeout support. (https://github.com/zenmumbler/promised-db)
+// promised-db - A promise-based wrapper to manage and simplify common tasks with IndexedDB
+// https://github.com/zenmumbler/promised-db
 // (c) 2016-Present by @zenmumbler
 
 declare global {
@@ -237,10 +238,10 @@ export class PromisedDB {
 	 * No further transactions can be performed after this point.
 	 */
 	close() {
-		if (this.dbState_ >= PDBState.Error) {
-			return;
-		}
-		this.db_.then(db => db.close());
+		this.db_.then(
+			db => db.close(),
+			() => { /* ignore rejections */ }
+		);
 	}
 
 	/**
