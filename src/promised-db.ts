@@ -48,16 +48,6 @@ interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursor<C> {
 	errorFn_?: (error: any) => void;
 }
 
-/** Open a named database with manual version and upgrade management */
-export function openDatabase(name: string, version: number, upgrade: PDBUpgradeCallback) {
-	return new PromisedDB(name, version, upgrade);
-}
-
-/** Open a named database providing a list of migration functions */
-export function openDatabaseWithMigrations(name: string, migrations: PDBMigrationCallback[]) {
-	return new PromisedDB(name, migrations);
-}
-
 /**
  * Delete a named database. Main usage for this is if you are making way for
  * another process that is blocked waiting to upgrade the database.
