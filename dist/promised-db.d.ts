@@ -25,7 +25,7 @@ declare global {
         readonly request: IDBRequest;
     }
 }
-export declare type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
+export declare type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number) => void;
 export declare type PDBMigrationHandler = (db: IDBDatabase) => void;
 export declare type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
 export interface PDBCursorOptions {

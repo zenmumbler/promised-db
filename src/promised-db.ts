@@ -36,7 +36,7 @@ declare global {
 	}
 }
 
-export type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
+export type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number) => void;
 export type PDBMigrationHandler = (db: IDBDatabase) => void;
 
 export type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDBTransactionHelpers) => Promise<T> | T;
@@ -213,7 +213,7 @@ export class PromisedDB {
 				db.onerror = (errorEvent) => {
 					rejectDB((errorEvent as ErrorEvent).error ?? new DOMException("An error occurred while upgrading the database", "UnknownError"));
 				};
-				upgrade!(db, upgradeEvt.oldVersion, upgradeEvt.newVersion || version);
+				upgrade!(db, upgradeEvt.oldVersion);
 			};
 			req.onsuccess = () => {
 				const db = req.result;

@@ -4,6 +4,7 @@
 - BREAKING: removed openDatabase call again
 - BREAKING: removed useless function argument for request
 - BREAKING: place the 2 optional args to cursor helpers in an options object
+- BREAKING: removed 2nd argument to upgrade function, which is redundant
 - expose all IDB 3.0 new type additions and normalise existing type usage
 - add support for simple managed migrations
 - add signal promises for opened, closed, outdated and blocked
