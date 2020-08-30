@@ -46,12 +46,12 @@ export interface PDBCursor<C extends IDBCursor> {
 	/** Optional callback for when the cursor has moved past the end of the range */
 	complete(callback: () => void): PDBCursor<C>;
 	/** Optional callback for when an error occurred while iterating over the range */
-	catch(callback: (error: any) => void): PDBCursor<C>;
+	catch(callback: (error: any, event: ErrorEvent) => void): PDBCursor<C>;
 }
 interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursor<C> {
 	callbackFn_?: (cursor: C) => void;
 	completeFn_?: () => void;
-	errorFn_?: (error: any) => void;
+	errorFn_?: (error: DOMException, event: ErrorEvent) => void;
 }
 
 /**
@@ -100,15 +100,15 @@ function cursorImpl<C extends IDBCursor>(cursorReq: IDBRequest): PDBCursor<C> {
 			this.completeFn_ = callback;
 			return this;
 		},
-		catch(this: PDBCursorBuilder<C>, callback: (error: any) => void): PDBCursor<C> {
+		catch(this: PDBCursorBuilder<C>, callback: (error: DOMException, event: ErrorEvent) => void): PDBCursor<C> {
 			this.errorFn_ = callback;
 			return this;
 		}
 	};
 
-	cursorReq.onerror = function() {
+	cursorReq.onerror = function(evt) {
 		if (result.errorFn_) {
-			result.errorFn_(cursorReq.error);
+			result.errorFn_(cursorReq.error!, evt as ErrorEvent);
 		}
 	};
 	cursorReq.onsuccess = function() {

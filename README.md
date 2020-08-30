@@ -154,8 +154,10 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
       .complete(() => {
         // (optional) do something when the cursor has iterated to the end of the range
       })
-      .catch(error => {
+      .catch((error: DOMException, event: ErrorEvent) => {
         // (optional) handle an error occurring inside cursor handling
+        // you can call `event.preventDefault()` to have failures not cause
+        // the whole transaction to abort
       });
 
     // if you don't care about the result you don't have to wrap requests
