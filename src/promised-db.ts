@@ -49,10 +49,8 @@ interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursor<C> {
 }
 
 /**
- * Delete a named database. Main usage for this is if you are making way for
- * another process that is blocked waiting to upgrade the database.
- * @see blocked
- * @see outdated
+ * Delete a named database. This will fail if the database in question is still
+ * in use or if it doesn't exist.
  */
 export function deleteDatabase(name: string) {
 	return new Promise<void>(function(resolve, reject) {
@@ -134,7 +132,7 @@ function keyCursor(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | I
 	return cursorImpl(cursorReq);
 }
 
-
+/** A promise-based wrapper to manage and simplify common tasks with IndexedDB */
 export class PromisedDB {
 	/* @internal */
 	private db_: Promise<IDBDatabase>;
@@ -145,12 +143,12 @@ export class PromisedDB {
 	/* @internal */
 	private blockedPromise_!: Promise<void>;
 
-	/* @internal */
+	/** Open a named database providing a list of migration functions */
 	constructor(name: string, migrations: PDBMigrationCallback[]);
-	/* @internal */
+	/** Open a named database with manual version and upgrade management */
 	constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
-	constructor(name: string, vorm?: number | PDBMigrationCallback[], upgrade?: PDBUpgradeCallback) {
 
+	constructor(name: string, vorm?: number | PDBMigrationCallback[], upgrade?: PDBUpgradeCallback) {
 		let version: number;
 		if (typeof vorm === "number" && typeof upgrade === "function") {
 			version = vorm;
