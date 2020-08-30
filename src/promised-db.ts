@@ -288,6 +288,7 @@ export class PromisedDB {
 
 	/**
 	 * Perform a transaction on specific stores in the database and optionally return data.
+	 * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
 	 * @param storeNames One or more names of the stores to include this transaction
 	 * @param mode Specify read only or read/write access to the stores
 	 * @param fn Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
@@ -304,10 +305,6 @@ export class PromisedDB {
 			};
 
 			const tr = db.transaction(storeNames, mode);
-			tr.onerror = (evt) => {
-				cancelTimeout();
-				reject((evt as ErrorEvent).error || tr.error);
-			};
 			tr.onabort = () => {
 				cancelTimeout();
 				reject(timedOut ? new DOMException("The operation timed out", "TimeoutError") : tr.error);
