@@ -109,7 +109,9 @@ export declare class PromisedDB {
      * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
      * @param storeNames One or more names of the stores to include this transaction
      * @param mode Specify read only or read/write access to the stores
+     * @param options Specify the durability of this transaction
      * @param handler Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
      */
-    transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T>;
+    transaction<T>(storeNames: string | string[], mode: IDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T>;
+    transaction<T>(storeNames: string | string[], mode: IDBTransactionMode, options: IDBTransactionOptions, handler: PDBTransactionHandler<T>): Promise<T>;
 }

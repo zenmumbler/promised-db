@@ -296,9 +296,21 @@ export class PromisedDB {
 	 * You may override the transaction's onerror handler but do not change the oncomplete or onabort events.
 	 * @param storeNames One or more names of the stores to include this transaction
 	 * @param mode Specify read only or read/write access to the stores
+	 * @param options Specify the durability of this transaction
 	 * @param handler Perform requests inside this function. Any value returned will be the value of the transaction's prmoise.
 	 */
-	transaction<T>(storeNames: string | string[], mode: PDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T> {
+	 transaction<T>(storeNames: string | string[], mode: IDBTransactionMode, handler: PDBTransactionHandler<T>): Promise<T>;
+	 transaction<T>(storeNames: string | string[], mode: IDBTransactionMode, options: IDBTransactionOptions, handler: PDBTransactionHandler<T>): Promise<T>;
+	 transaction<T>(storeNames: string | string[], mode: IDBTransactionMode, optionsOrHandler: IDBTransactionOptions | PDBTransactionHandler<T>, handler?: PDBTransactionHandler<T>): Promise<T> {
+		let options: IDBTransactionOptions;
+		if (typeof optionsOrHandler === "function") {
+			handler = optionsOrHandler;
+			options = {};
+		}
+		else {
+			options = optionsOrHandler;
+		}
+
 		return this.db_.then(db => new Promise<T>((resolve, reject) => {
 			let timeoutID: number | undefined;
 			let timedOut = false;
@@ -309,7 +321,7 @@ export class PromisedDB {
 				}
 			};
 
-			const tx = db.transaction(storeNames, mode);
+			const tx = db.transaction(storeNames, mode, options);
 			tx.onabort = () => {
 				cancelTimeout();
 				reject(timedOut ? new DOMException("The operation timed out", "TimeoutError") : tx.error);
@@ -333,7 +345,7 @@ export class PromisedDB {
 				}
 			};
 
-			const result = handler(tx, helpers);
+			const result = handler!(tx, helpers);
 		}));
 	}
 }
