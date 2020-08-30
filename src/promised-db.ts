@@ -46,7 +46,7 @@ export interface PDBCursor<C extends IDBCursor> {
 	/** Optional callback for when the cursor has moved past the end of the range */
 	complete(callback: () => void): PDBCursor<C>;
 	/** Optional callback for when an error occurred while iterating over the range */
-	catch(callback: (error: any, event: ErrorEvent) => void): PDBCursor<C>;
+	catch(callback: (error: DOMException, event: ErrorEvent) => void): PDBCursor<C>;
 }
 interface PDBCursorBuilder<C extends IDBCursor> extends PDBCursor<C> {
 	callbackFn_?: (cursor: C) => void;

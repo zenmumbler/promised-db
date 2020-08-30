@@ -11,13 +11,17 @@ export declare type PDBTransactionHandler<T> = (tx: IDBTransaction, helpers: PDB
 export declare type PDBUpgradeHandler = (db: IDBDatabase, fromVersion: number, toVersion: number) => void;
 export declare type PDBMigrationHandler = (db: IDBDatabase) => void;
 export declare type PDBTransactionMode = "readonly" | "readwrite";
+export interface PDBCursorOptions {
+    range?: IDBKeyRange | IDBValidKey;
+    direction?: PDBCursorDirection;
+}
 export interface PDBTransactionHelpers {
     /** Wrap a request inside a promise */
     request: <T>(req: IDBRequest) => Promise<T>;
     /** Return a cursor interface to iterate over a sequence of key-value pairs */
-    cursor: (container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursor<IDBCursorWithValue>;
+    cursor: (container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) => PDBCursor<IDBCursorWithValue>;
     /** Return a cursor interface to iterate over a sequence of keys */
-    keyCursor: (index: IDBIndex, range?: IDBKeyRange | IDBValidKey, direction?: PDBCursorDirection) => PDBCursor<IDBCursor>;
+    keyCursor: (container: IDBIndex | IDBObjectStore, options?: PDBCursorOptions) => PDBCursor<IDBCursor>;
     /** Configure a timeout for this transaction. If the transaction does not complete within the specified time it will reject with a TimeoutError */
     timeout: (ms: number) => void;
 }
@@ -31,7 +35,7 @@ export interface PDBCursor<C extends IDBCursor> {
     /** Optional callback for when the cursor has moved past the end of the range */
     complete(callback: () => void): PDBCursor<C>;
     /** Optional callback for when an error occurred while iterating over the range */
-    catch(callback: (error: any) => void): PDBCursor<C>;
+    catch(callback: (error: DOMException, event: ErrorEvent) => void): PDBCursor<C>;
 }
 /**
  * Delete a named database. This will fail if the database in question is still
