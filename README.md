@@ -12,10 +12,10 @@ IndexedDB databases are separated by origin (domain name + port + protocol) and 
 stored on the end-user's computer, they are referenced by name. Each database is
 versioned, promised db takes advantage of this.
 
-When you connect to a database, it opens up an existing database or creates a
+Creating a PromisedDB instance opens up an existing database or creates a
 new one if no database by that name exists. You will have to set up any stores
 and indexes when creating a new db or upgrading an existing one. The easiest way
-to do this is via a list of migrations.
+to do this is via a list of migrations:
 
 ```typescript
 import { PromisedDB } from "promised-db";
@@ -68,11 +68,11 @@ app then your new code may have changed to use a newer revision of the database.
 
 Both the app trying to upgrade and any apps running with older versions will be
 notified of this situation and you can attach handlers to the `blocked` and
-`outdated` promises on your pdb instance
+`outdated` promises on your pdb instance:
 
 ```typescript
 let waiting = false;
-const pdb = await openDatabase(...);
+const pdb = new PromisedDB(...);
 
 // The first 2 promises are for the newer app that is trying to upgrade the database
 pdb.blocked.then(() => {
@@ -105,12 +105,12 @@ the newer code will not connect and the older code will continue blissfully unaw
 Get notified when the database is closed externally
 ---------------------------------------------------
 IndexedDB instances may be closed at any time if, for example, the user chooses
-to clear out caches or if the alloted space for databases is running low. To be
+to clear out caches or if the allotted space for databases is running low. To be
 notified when this happens you can listen for the `closed` promise to resolve
 and take any action needed, like showing some UI to inform the user.
 
 ```typescript
-const pdb = await openDatabase(...);
+const pdb = new PromisedDB(...);
 pdb.closed.then(() => {
   // oh no
 });
@@ -127,13 +127,13 @@ Every read/write operation on the db is done in a transaction, start one using t
 // and either "readonly" or "readwrite" as access type
 const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
   // you pass a function that constitutes the actual transaction
-  // you get the IDBTransaction and a context object as parameters (see doc below)
-  (tr, {request, timeout, cursor, keyCursor}) => {
+  // you get the IDBTransaction and a helpers object as parameters (see doc below)
+  (tx, {request, timeout, cursor, keyCursor}) => {
     // have this request timeout and abort after 5 seconds (optional)
     timeout(5000);
 
-    // tr is a standard IDBTransaction interface
-    const stuff = tr.objectStore("stuff");
+    // tx is a standard IDBTransaction interface
+    const stuff = tx.objectStore("stuff");
 
     // use request(r: IDBRequest) to Promise-wrap any IDB request
     // this includes: get(), put(), update(), delete(), count(), getAll(), getAllKeys(), etc.
@@ -141,8 +141,8 @@ const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
     const itemProm = request<MyItem>(stuff.get(someKey));
 
     // Use cursor or keyCursor to build a fluent cursor object to iterate
-    // over rows with full control.
-    // direction is "next" | "prev" | "nextunique" | "prevunique", default "next"
+    // over either all rows or those within a range, if provided.
+    // `direction` is "next" | "prev" | "nextunique" | "prevunique", default "next"
     cursor(stuff, optionalRange, direction)
       .next(cur => {
         // cur is an IDBCursor, `value` will be present for non-key cursors
