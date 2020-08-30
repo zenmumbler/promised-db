@@ -6,16 +6,16 @@ the event handlers and clumsy cursor API while still being able to use IndexedDB
 You also get timeouts in transactions, a migration-based workflow and promise-based event signals
 to coordinate database version conflicts.
 
-Create or Open a Database
+Create or open a database
 -------------------------
 IndexedDB databases are separated by origin (domain name + port + protocol) and are
 stored on the end-user's computer, they are referenced by name. Each database is
 versioned, promised db takes advantage of this.
 
 Creating a PromisedDB instance opens up an existing database or creates a
-new one if no database by that name exists. You will have to set up any stores
-and indexes when creating a new db or upgrading an existing one. The easiest way
-to do this is via a list of migrations:
+new one if no database by that name exists. When a new database is created or if
+your code introduces changes to the database schema, the database needs to be upgraded.
+The easiest way to do this is via a list of migrations:
 
 ```typescript
 import { PromisedDB } from "promised-db";
@@ -48,8 +48,6 @@ If you need to have more fine-grained control over versions and the upgrade proc
 you can also specify a version number and a single upgrade function:
 
 ```typescript
-import { PromisedDB } from "promised-db";
-
 const pdb = new PromisedDB("mydb", 1,
   (db, onDiskVersion, newVersion) => {
     if (onDiskVersion < 1) {
@@ -82,7 +80,7 @@ pdb.blocked.then(() => {
 pdb.opened.then(() => {
   if (waiting) {
     waiting = false;
-    // Blocked status was resolved, continue normally.
+    // Blocked status was resolved, continue as usual.
   }
 });
 
@@ -100,22 +98,6 @@ pdb.outdated.then(() => {
 
 Handling this situation is optional. If you do not act on `blocked` or `outdated` signals
 the newer code will not connect and the older code will continue blissfully unaware.
-
-
-Get notified when the database is closed externally
----------------------------------------------------
-IndexedDB instances may be closed at any time if, for example, the user chooses
-to clear out caches or if the allotted space for databases is running low. To be
-notified when this happens you can listen for the `closed` promise to resolve
-and take any action needed, like showing some UI to inform the user.
-
-```typescript
-const pdb = new PromisedDB(...);
-pdb.closed.then(() => {
-  // oh no
-});
-```
-
 
 Transactions
 ------------
@@ -178,46 +160,49 @@ trans
   });
 ```
 
+`transaction` also takes an optional 3rd argument to specify the durability
+of the transaction. This can be done to ensure quick flushing of critical data.
+
+⚠️ This feature is not yet widely implemented. In environments where it is not
+available, this option is ignored and "relaxed" durability (the default) is used.
+
+```typescript
+const trans = pdb.transaction(["stuff", "morestuff"], "readonly",
+  {
+    durability: "strict"
+  },
+  (tx, {request}) => {
+    // ...
+  });
+```
+
+
 Closing the Database
 --------------------
-In many cases you don't have to manually close a database, but if you do then
-call the `close` method on your instance:
+Normally you don't need to close a database explicitly, the main use case for
+this is in response to an `outdated` signal. Closing the connection allows
+upgrade events in other instances of your app to continue.
 
 ```typescript
-pdb.close(); // no result
+pdb.close();
 ```
 
-While the pdb instance is still there after calling `close`(),
-it is now in a state where you can no longer run transactions on it.
+Get notified when the database is closed externally
+---------------------------------------------------
+IndexedDB instances may be closed at any time if, for example, the user chooses
+to clear out caches or if the allotted space for databases is running low. To be
+notified when this happens you can listen for the `closed` promise to resolve
+and take any action needed, like showing some UI to inform the user.
 
-Deleting a Database
--------------------
-To delete a database, pass the name of the database you wish to delete.
-This function is a promise-wrapped `indexedDB.deleteDatabase()`.
+Note that this promise does not resolve if you close the database yourself. This
+is purely a notification for when the database is closed outside of your control.
 
 ```typescript
-import { deleteDatabase } from "promised-db";
-
-deleteDatabase("mydb")
-  .then(() => { /* success */ })
-  .catch(err => { /* handle error */ });
+const pdb = new PromisedDB(...);
+pdb.closed.then(() => {
+  // oh no
+});
 ```
-
-Deleting will fail if the database does't exist or is still in use.
-
-Testing the relative order of keys
-----------------------------------
-You can manually query the relative order of 2 keys by passing them
-to `compareKeys`. This function is equivalent to `indexedDB.cmp()`.
-
-```typescript
-import { compareKeys } from "promised-db";
-
-// ordering is -1 if keyA < keyB, 1 if keyA > keyB and 0 if the keys are equal
-let ordering = compareKeys(keyA, keyB);
-```
-
-This function will throw if either keyA or keyB is not a valid IndexedDB key.
 
 List available databases
 ------------------------
@@ -233,6 +218,36 @@ import { listDatabases } from "promised-db";
 // dbs is an array of { name: string; version: number; } records
 const dbs = await listDatabases();
 ```
+
+Deleting a Database
+-------------------
+To delete a database, pass the name of the database you wish to delete.
+This function is a promise-wrapped `indexedDB.deleteDatabase()`.
+
+```typescript
+import { deleteDatabase } from "promised-db";
+
+deleteDatabase("mydb")
+  .then(() => { /* success */ })
+  .catch(err => { /* handle error */ });
+```
+
+Deleting will fail if the named database doesn't exist or is still in use.
+
+Testing the relative order of keys
+----------------------------------
+You can manually query the relative order of 2 keys by passing them to
+`compareKeys`. This function is equivalent to `indexedDB.cmp()` and mainly
+provided for consistency.
+
+```typescript
+import { compareKeys } from "promised-db";
+
+// ordering is -1 if keyA < keyB, 1 if keyA > keyB and 0 if the keys are equal
+let ordering = compareKeys(keyA, keyB);
+```
+
+This function will throw if either keyA or keyB is not a valid IndexedDB key.
 
 ---
 
