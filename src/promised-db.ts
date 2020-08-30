@@ -144,13 +144,6 @@ function keyCursor(container: IDBIndex | IDBObjectStore, range?: IDBKeyRange | I
 	return cursorImpl(cursorReq);
 }
 
-const enum PDBState {
-	Init,
-	Blocked,
-	Open,
-	Error,
-	Closed
-}
 
 export class PromisedDB {
 	/* @internal */
@@ -161,15 +154,12 @@ export class PromisedDB {
 	private versionChangePromise_!: Promise<void>;
 	/* @internal */
 	private blockedPromise_!: Promise<void>;
-	/* @internal */
-	private dbState_: PDBState;
 
 	/* @internal */
 	constructor(name: string, migrations: PDBMigrationCallback[]);
 	/* @internal */
 	constructor(name: string, version: number, upgrade: PDBUpgradeCallback);
 	constructor(name: string, vorm?: number | PDBMigrationCallback[], upgrade?: PDBUpgradeCallback) {
-		this.dbState_ = PDBState.Init;
 
 		let version: number;
 		if (typeof vorm === "number" && typeof upgrade === "function") {
@@ -194,17 +184,14 @@ export class PromisedDB {
 		this.blockedPromise_ = new Promise<void>((resolveBlocked) => {
 			const req = indexedDB.open(name, version);
 			req.onerror = () => {
-				this.dbState_ = PDBState.Error;
 				rejectDB(req.error || new DOMException(`Could not open database "${name}"`, "UnknownError"));
 			};
 			req.onblocked = () => {
-				this.dbState_ = PDBState.Blocked;
 				resolveBlocked();
 			};
 			req.onupgradeneeded = (upgradeEvt) => {
 				const db = req.result;
 				db.onerror = (errorEvent) => {
-					this.dbState_ = PDBState.Error;
 					rejectDB((errorEvent as ErrorEvent).error ?? new DOMException("An error occurred while upgrading the database", "UnknownError"));
 				};
 				upgrade!(db, upgradeEvt.oldVersion, upgradeEvt.newVersion || version);
@@ -212,7 +199,6 @@ export class PromisedDB {
 			req.onsuccess = () => {
 				const db = req.result;
 				db.onerror = null;
-				this.dbState_ = PDBState.Open;
 
 				// Create the promises that will resolve on close and versionchange events.
 				// These can be handled or ignored by users as they wish.
@@ -247,7 +233,7 @@ export class PromisedDB {
 	/**
 	 * A promise that will resolve if the connection to the database opened and any
 	 * upgrades were succesfully applied. In basic situations you don't have to wait for
-	 * this to happend but waiting for this if the connection was blocked will allow
+	 * this to happen but waiting for this if the connection was blocked will allow
 	 * you to remove any UI you put up while waiting for the connection to become available.
 	 */
 	get opened() {
