@@ -1,46 +1,24 @@
 PromisedDB
 ==========
-A library with TypeScript support for a better experience using IndexedDB, hiding
-the event handlers and weird cursor API stuff that I don't like while still using
-IndexedDB as normal as possible.
+A library with TypeScript support for a better experience using IndexedDB, wrapping
+the event handlers and clumsy cursor API while still being able to use IndexedDB as normal as possible.
 
-In return you get a simple class that wraps the transaction flow of IndexedDB with
-(optional) Promise-wrapped actions performed on the IDB interfaces. It also adds
-timeout functionality to transactions.
+You also get timeouts in transactions, a migration-based workflow and promise-based event signals
+to coordinate database version conflicts.
 
 Create or Open a Database
 -------------------------
-The `openDatabase` function returns a promise to a `PromisedDB` instance and works
-similarly to a `new IndexedDB(...)` call. You provide the db name and version and the
-upgrade function. The returned promise resolves when any upgrades are complete.
+IndexedDB databases are separated by origin (domain name + port + protocol) and are
+stored on the end-user's computer, they are referenced by name. Each database is
+versioned, promised db takes advantage of this.
+
+When you connect to a database, it opens up an existing database or creates a
+new one if no database by that name exists. You will have to set up any stores
+and indexes when creating a new db or upgrading an existing one. The easiest way
+to do this is via a list of migrations.
 
 ```typescript
-import { openDatabase } from "promised-db";
-
-const pdb = await openDatabase("mydb", 1,
-  (db, onDiskVersion, newVersion) => {
-    // This callback is called when there is no DB on disk or if the version
-    // number you specified is greater than the one on disk.
-    // This function is the _only_ place where you can make schema changes to
-    // the database.
-
-    // db is an IDBDatabase instance
-    // proceed as in a normal upgradeneeded callback
-    const stuff = db.createObjectStore("stuff", { keyPath: "index" });
-    stuff.createIndex("userID", "userID", { unique: true });
-  });
-```
-
-Open a Database with migration functions
-----------------------------------------
-PromisedDB supports a simple migration system that takes advantage of versioned
-nature of IndexedDB. Instead of a version and update function, you provide an
-array of migration functions. Each function runs one migration similar to how
-they are managed in many server side frameworks. The number of migrations is the
-current version of the database.
-
-```typescript
-import { openDatabaseWithMigrations } from "promised-db";
+import { PromisedDB } from "promised-db";
 
 const migrations = [
   (db: IDBDatabase) => {
@@ -56,11 +34,88 @@ const migrations = [
   // etc
 ];
 
-const db = await openDatabaseWithMigrations("mydb", migrations);
+const pdb = new PromisedDB("mydb", migrations);
 ```
 
-The advantage of this is that you can organise your migrations separately and not
-have to worry about creating unwieldy upgrade functions or about version numbers.
+Each function runs one migration similar to how they are managed in many server
+frameworks. The number of migrations equals the current version of the database.
+PromisedDB will automatically call the correct migrations for new and existing
+databases.
+
+### Manual Versioning
+
+If you need to have more fine-grained control over versions and the upgrade process
+you can also specify a version number and a single upgrade function:
+
+```typescript
+import { PromisedDB } from "promised-db";
+
+const pdb = new PromisedDB("mydb", 1,
+  (db, onDiskVersion, newVersion) => {
+    if (onDiskVersion < 1) {
+      const stuff = db.createObjectStore("stuff", { keyPath: "index" });
+      stuff.createIndex("userID", "userID", { unique: true });
+    }
+    // ...etc
+  });
+```
+
+Handling version conflicts
+--------------------------
+IndexedDB is typically used in web apps that may stay open in a tab for long
+periods of time, sometimes days or even longer. If a user opens a new tab with your
+app then your new code may have changed to use a newer revision of the database.
+
+Both the app trying to upgrade and any apps running with older versions will be
+notified of this situation and you can attach handlers to the `blocked` and
+`outdated` promises on your pdb instance
+
+```typescript
+let waiting = false;
+const pdb = await openDatabase(...);
+
+// The first 2 promises are for the newer app that is trying to upgrade the database
+pdb.blocked.then(() => {
+  waiting = true;
+  // Show some UI to ask the user to reload or close any other tabs running the same app.
+});
+pdb.opened.then(() => {
+  if (waiting) {
+    waiting = false;
+    // Blocked status was resolved, continue normally.
+  }
+});
+
+// This promise will resolve on apps running older code to notify them that they
+// are blocking the newer code from proceeding.
+pdb.outdated.then(() => {
+  // Recommended course of action is to save any outstanding data
+  // and then close the connection or to reload the current window if
+  // that would not put the app in a state that would surprise the user.
+  saveData();
+  pdb.close();
+  showReloadUI();
+});
+```
+
+Handling this situation is optional. If you do not act on `blocked` or `outdated` signals
+the newer code will not connect and the older code will continue blissfully unaware.
+
+
+Get notified when the database is closed externally
+---------------------------------------------------
+IndexedDB instances may be closed at any time if, for example, the user chooses
+to clear out caches or if the alloted space for databases is running low. To be
+notified when this happens you can listen for the `closed` promise to resolve
+and take any action needed, like showing some UI to inform the user.
+
+```typescript
+const pdb = await openDatabase(...);
+pdb.closed.then(() => {
+  // oh no
+});
+```
+
 
 Transactions
 ------------
